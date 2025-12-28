@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>My Courses - eLEARNING</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navbar Start -->
+    <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+        <a href="index.html" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+            <h2 class="m-0 text-primary"><i class="fa fa-book me-3"></i>eLEARNING</h2>
+        </a>
+        <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <form class="d-flex me-3" style="min-width: 300px;">
+                    <input class="form-control" type="search" placeholder="Search courses..." aria-label="Search">
+                    <button class="btn btn-primary ms-2" type="submit"><i class="fa fa-search"></i></button>
+                </form>
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fa fa-user-circle fa-2x"></i>
+                    </a>
+                    <div class="dropdown-menu fade-down m-0">
+                        <a href="dashboard.html" class="dropdown-item">Dashboard</a>
+                        <a href="#" class="dropdown-item">Profile</a>
+                        <a href="login.html" class="dropdown-item">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Navbar End -->
+
+    <!-- Dashboard Content -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Start -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html">
+                                <i class="fa fa-home me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="my-courses.html">
+                                <i class="fa fa-book me-2"></i>
+                                My Courses
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="certificates.html">
+                                <i class="fa fa-certificate me-2"></i>
+                                Certificates
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fa fa-cog me-2"></i>
+                                Settings
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <!-- Sidebar End -->
+
+            <!-- Main Content Start -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="py-4">
+                    <h2 class="mb-4">My Courses</h2>
+
+                    <!-- Filter Tabs -->
+                    <ul class="nav nav-tabs mb-4">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#all">All Courses (5)</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#inprogress">In Progress (3)</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#completed">Completed (2)</a>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- All Courses Tab -->
+                        <div class="tab-pane fade show active" id="all">
+                            <div class="row g-4">
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="course-item bg-light rounded">
+                                        <div class="position-relative overflow-hidden">
+                                            <img class="img-fluid" src="img/course-1.jpg" alt="">
+                                            <span class="badge bg-primary position-absolute top-0 start-0 m-3">In Progress</span>
+                                        </div>
+                                        <div class="text-center p-4">
+                                            <h5 class="mb-3">Web Design & Development</h5>
+                                            <div class="mb-3">
+                                                <small class="text-muted">Progress:</small>
+                                                <div class="progress mt-2" style="height: 15px;">
+                                                    <div class="progress-bar bg-primary" style="width: 60%">60%</div>
+                                                </div>
+                                            </div>
+                                            <a href="lesson-viewer.html" class="btn btn-primary mb-2 w-100">Continue Learning</a>
+                                            <a href="course-details.html" class="btn btn-outline-primary w-100">View Course</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="course-item bg-light rounded">
+                                        <div class="position-relative overflow-hidden">
+                                            <img class="img-fluid" src="img/course-2.jpg" alt="">
+                                            <span class="badge bg-success position-absolute top-0 start-0 m-3">Completed</span>
+                                        </div>
+                                        <div class="text-center p-4">
+                                            <h5 class="mb-3">Graphic Design Masterclass</h5>
+                                            <div class="mb-3">
+                                                <small class="text-muted">Progress:</small>
+                                                <div class="progress mt-2" style="height: 15px;">
+                                                    <div class="progress-bar bg-success" style="width: 100%">100%</div>
+                                                </div>
+                                            </div>
+                                            <a href="certificates.html" class="btn btn-success mb-2 w-100">View Certificate</a>
+                                            <a href="course-details.html" class="btn btn-outline-primary w-100">Review Course</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="course-item bg-light rounded">
+                                        <div class="position-relative overflow-hidden">
+                                            <img class="img-fluid" src="img/course-3.jpg" alt="">
+                                            <span class="badge bg-primary position-absolute top-0 start-0 m-3">In Progress</span>
+                                        </div>
+                                        <div class="text-center p-4">
+                                            <h5 class="mb-3">Video Editing Pro</h5>
+                                            <div class="mb-3">
+                                                <small class="text-muted">Progress:</small>
+                                                <div class="progress mt-2" style="height: 15px;">
+                                                    <div class="progress-bar bg-warning" style="width: 30%">30%</div>
+                                                </div>
+                                            </div>
+                                            <a href="lesson-viewer.html" class="btn btn-primary mb-2 w-100">Continue Learning</a>
+                                            <a href="course-details.html" class="btn btn-outline-primary w-100">View Course</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="course-item bg-light rounded">
+                                        <div class="position-relative overflow-hidden">
+                                            <img class="img-fluid" src="img/course-1.jpg" alt="">
+                                            <span class="badge bg-success position-absolute top-0 start-0 m-3">Completed</span>
+                                        </div>
+                                        <div class="text-center p-4">
+                                            <h5 class="mb-3">Digital Marketing Strategy</h5>
+                                            <div class="mb-3">
+                                                <small class="text-muted">Progress:</small>
+                                                <div class="progress mt-2" style="height: 15px;">
+                                                    <div class="progress-bar bg-success" style="width: 100%">100%</div>
+                                                </div>
+                                            </div>
+                                            <a href="certificates.html" class="btn btn-success mb-2 w-100">View Certificate</a>
+                                            <a href="course-details.html" class="btn btn-outline-primary w-100">Review Course</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="course-item bg-light rounded">
+                                        <div class="position-relative overflow-hidden">
+                                            <img class="img-fluid" src="img/course-2.jpg" alt="">
+                                            <span class="badge bg-primary position-absolute top-0 start-0 m-3">In Progress</span>
+                                        </div>
+                                        <div class="text-center p-4">
+                                            <h5 class="mb-3">JavaScript Programming</h5>
+                                            <div class="mb-3">
+                                                <small class="text-muted">Progress:</small>
+                                                <div class="progress mt-2" style="height: 15px;">
+                                                    <div class="progress-bar bg-info" style="width: 45%">45%</div>
+                                                </div>
+                                            </div>
+                                            <a href="lesson-viewer.html" class="btn btn-primary mb-2 w-100">Continue Learning</a>
+                                            <a href="course-details.html" class="btn btn-outline-primary w-100">View Course</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- In Progress Tab -->
+                        <div class="tab-pane fade" id="inprogress">
+                            <p class="text-muted">Courses currently in progress will appear here...</p>
+                        </div>
+
+                        <!-- Completed Tab -->
+                        <div class="tab-pane fade" id="completed">
+                            <p class="text-muted">Completed courses will appear here...</p>
+                        </div>
+                    </div>
+
+                    <!-- Browse More Courses -->
+                    <div class="bg-light rounded p-4 mt-5 text-center">
+                        <h5 class="mb-3">Want to Learn More?</h5>
+                        <p class="text-muted mb-3">Explore our course catalog and continue your learning journey</p>
+                        <a href="course-list.html" class="btn btn-primary">
+                            <i class="fa fa-search me-2"></i>Browse All Courses
+                        </a>
+                    </div>
+                </div>
+            </main>
+            <!-- Main Content End -->
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

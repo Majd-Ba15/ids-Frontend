@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Lesson Viewer - eLEARNING</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Top Navbar Start -->
+    <nav class="navbar navbar-expand-lg bg-white navbar-light shadow p-2">
+        <div class="container-fluid">
+            <a href="dashboard.html" class="btn btn-light me-3"><i class="fa fa-arrow-left me-2"></i>Back to Course</a>
+            <span class="navbar-text flex-grow-1 text-center">
+                <strong>Module 2: CSS Styling - Lesson 2: CSS Flexbox Layout</strong>
+            </span>
+            <div class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fa fa-user-circle fa-2x"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end m-0">
+                    <a href="dashboard.html" class="dropdown-item">Dashboard</a>
+                    <a href="#" class="dropdown-item">Profile</a>
+                    <a href="login.html" class="dropdown-item">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Top Navbar End -->
+
+    <!-- Lesson Content Start -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Main Video/Content Area -->
+            <div class="col-lg-9">
+                <div class="p-4">
+                    <!-- Video Player -->
+                    <div class="ratio ratio-16x9 mb-4 bg-dark rounded">
+                        <div class="d-flex align-items-center justify-content-center text-white">
+                            <div class="text-center">
+                                <i class="fa fa-play-circle fa-5x mb-3"></i>
+                                <h4>Video: CSS Flexbox Layout</h4>
+                                <p>Duration: 25 minutes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lesson Info -->
+                    <div class="mb-4">
+                        <h3 class="mb-3">CSS Flexbox Layout</h3>
+                        <p>In this lesson, you'll learn how to use CSS Flexbox to create flexible and responsive layouts. Flexbox is a powerful layout system that makes it easy to align and distribute elements within a container.</p>
+                        
+                        <h5 class="mt-4 mb-3">What You'll Learn:</h5>
+                        <ul>
+                            <li>Understanding Flexbox container and items</li>
+                            <li>Main axis and cross axis concepts</li>
+                            <li>Justify-content and align-items properties</li>
+                            <li>Flex-wrap and flex-direction</li>
+                            <li>Building responsive layouts with Flexbox</li>
+                        </ul>
+
+                        <h5 class="mt-4 mb-3">Lesson Resources:</h5>
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fa fa-file-pdf text-danger me-2"></i>Lesson Slides (PDF)
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fa fa-code text-primary me-2"></i>Code Examples (ZIP)
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fa fa-link text-info me-2"></i>Additional Resources
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Lesson Navigation -->
+                    <div class="d-flex justify-content-between border-top pt-4">
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fa fa-arrow-left me-2"></i>Previous Lesson
+                        </a>
+                        <button class="btn btn-success">
+                            <i class="fa fa-check me-2"></i>Mark as Completed
+                        </button>
+                        <a href="quiz.html" class="btn btn-primary">
+                            Next: Quiz<i class="fa fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Sidebar -->
+            <div class="col-lg-3 bg-light border-start">
+                <div class="p-3">
+                    <h5 class="mb-3">Course Content</h5>
+                    
+                    <!-- Progress -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Your Progress</span>
+                            <span class="text-primary"><strong>60%</strong></span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-primary" style="width: 60%"></div>
+                        </div>
+                        <small class="text-muted">6 of 10 lessons completed</small>
+                    </div>
+
+                    <!-- Lessons List -->
+                    <div class="accordion" id="lessonsAccordion">
+                        <!-- Module 1 -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#module1">
+                                    <small><strong>Module 1: HTML</strong></small>
+                                </button>
+                            </h2>
+                            <div id="module1" class="accordion-collapse collapse" data-bs-parent="#lessonsAccordion">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        <a href="#" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-check-circle text-success me-2"></i>Intro to HTML</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-check-circle text-success me-2"></i>HTML Tags</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-check-circle text-success me-2"></i>Semantic HTML</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module 2 -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#module2">
+                                    <small><strong>Module 2: CSS</strong></small>
+                                </button>
+                            </h2>
+                            <div id="module2" class="accordion-collapse collapse show" data-bs-parent="#lessonsAccordion">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        <a href="#" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-check-circle text-success me-2"></i>CSS Basics</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action active py-2">
+                                            <small><i class="fa fa-play-circle me-2"></i>CSS Flexbox</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-circle text-muted me-2" style="font-size: 8px;"></i>CSS Grid</small>
+                                        </a>
+                                        <a href="quiz.html" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-question-circle text-warning me-2"></i>Quiz: CSS</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module 3 -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#module3">
+                                    <small><strong>Module 3: JavaScript</strong></small>
+                                </button>
+                            </h2>
+                            <div id="module3" class="accordion-collapse collapse" data-bs-parent="#lessonsAccordion">
+                                <div class="accordion-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        <a href="#" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-lock text-muted me-2"></i>JS Introduction</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-lock text-muted me-2"></i>Variables</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action py-2">
+                                            <small><i class="fa fa-lock text-muted me-2"></i>Functions</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Actions -->
+                    <div class="mt-4">
+                        <a href="course-details.html" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fa fa-book me-2"></i>Course Details
+                        </a>
+                        <a href="dashboard.html" class="btn btn-outline-secondary w-100">
+                            <i class="fa fa-home me-2"></i>My Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Lesson Content End -->
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
