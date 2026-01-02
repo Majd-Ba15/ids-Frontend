@@ -13,6 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+const handleLogout = () => {
+  localStorage.removeItem("token")
+  window.location.href = "/login"
+}
 
 export function Header({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   return (
@@ -24,13 +28,6 @@ export function Header({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
           <span className="text-2xl font-bold text-primary">eLEARNING</span>
         </Link>
 
-        {/* Search Bar */}
-        <div className="hidden flex-1 max-w-md mx-8 md:flex">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input type="search" placeholder="Search courses..." className="w-full pl-10" />
-          </div>
-        </div>
 
         {/* User Menu */}
         <div className="flex items-center gap-4">
@@ -60,10 +57,13 @@ export function Header({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
+                <DropdownMenuItem
+  onClick={handleLogout}
+  className="cursor-pointer text-red-600"
+>
+  <LogOut className="mr-2 h-4 w-4" />
+  Logout
+</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
