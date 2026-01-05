@@ -1,135 +1,100 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
+
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import Link from "next/link"
-import { useState } from "react"
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 
-export default function LessonViewerPage({
-  params,
-}: {
-  params: { id: string; lessonId: string }
-}) {
-  const [completed, setCompleted] = useState(false)
+type Lesson = {
+  id: number
+  title: string
+  content: string
+  videoUrl: string | null
+  attachmentUrl: string | null
+  lessonType: string
+}
 
-  const lesson = {
-    id: params.lessonId,
-    title: "CSS Layouts with Flexbox",
-    courseId: params.id,
-    courseName: "Web Development Fundamentals",
-    videoUrl: "https://example.com/video.mp4",
-    content: `
-      In this lesson, you'll learn about CSS Flexbox, a powerful layout system that makes it easy to design flexible responsive layout structures.
-      
-      Flexbox provides:
-      • Simple alignment of items
-      • Equal spacing between elements
-      • Flexible sizing and wrapping
-      • Responsive design capabilities
-      
-      We'll cover the main properties like display: flex, justify-content, align-items, and flex-direction.
-    `,
-    previousLesson: Number.parseInt(params.lessonId) > 1 ? (Number.parseInt(params.lessonId) - 1).toString() : null,
-    nextLesson: (Number.parseInt(params.lessonId) + 1).toString(),
-  }
+export default function LessonViewerPage() {
+  const params = useParams()
+  const router = useRouter()
+
+  const courseId = params?.id
+  const lessonId = params?.lessonId
+
+  const [lesson, setLesson] = useState<Lesson | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!lessonId) return
+
+    const fetchLesson = async () => {
+      try {
+        const res = await fetch(
+          `https://localhost:7026/api/Lessons/${lessonId}`
+        )
+
+        if (!res.ok) {
+          throw new Error("Failed to load lesson")
+        }
+
+        const data = await res.json()
+        setLesson(data)
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLesson()
+  }, [lessonId])
+
+  if (loading) return <p className="p-6">Loading lesson...</p>
+  if (error) return <p className="p-6 text-red-500">{error}</p>
+  if (!lesson) return <p className="p-6">Lesson not found</p>
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header isLoggedIn />
 
-      <main className="flex-1">
-        <div className="container mx-auto py-8 px-4">
-          {/* Breadcrumb */}
-          <div className="mb-6 text-sm text-muted-foreground">
-            <Link href="/dashboard/courses" className="hover:text-primary">
-              My Courses
-            </Link>
-            {" / "}
-            <Link href={`/courses/${lesson.courseId}`} className="hover:text-primary">
-              {lesson.courseName}
-            </Link>
-            {" / "}
-            <span className="text-foreground">{lesson.title}</span>
-          </div>
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <Button variant="outline" asChild>
+          <Link href={`/courses/${courseId}`}>← Back to Course</Link>
+        </Button>
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-2xl">{lesson.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Video Player Placeholder */}
-                  <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <PlayCircle className="h-16 w-16 text-primary mx-auto mb-2" />
-                      <p className="text-muted-foreground">Video Player</p>
-                    </div>
-                  </div>
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>{lesson.title}</CardTitle>
+          </CardHeader>
 
-                  {/* Lesson Content */}
-                  <div className="prose prose-sm max-w-none">
-                    <div className="whitespace-pre-line">{lesson.content}</div>
-                  </div>
+          <CardContent className="space-y-6">
+            {/* VIDEO */}
+            {lesson.videoUrl && (
+              <div className="aspect-video">
+                <iframe
+                  src={lesson.videoUrl}
+                  className="w-full h-full rounded"
+                  allowFullScreen
+                />
+              </div>
+            )}
 
-                  {/* Navigation & Mark Complete */}
-                  <div className="flex items-center justify-between pt-6 border-t">
-                    <div>
-                      {lesson.previousLesson && (
-                        <Button variant="outline" asChild>
-                          <Link href={`/courses/${lesson.courseId}/lessons/${lesson.previousLesson}`}>
-                            <ChevronLeft className="mr-2 h-4 w-4" />
-                            Previous Lesson
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
-                    <Button onClick={() => setCompleted(!completed)} variant={completed ? "outline" : "default"}>
-                      {completed ? "Completed ✓" : "Mark as Completed"}
-                    </Button>
-                    <div>
-                      {lesson.nextLesson && (
-                        <Button asChild>
-                          <Link href={`/courses/${lesson.courseId}/lessons/${lesson.nextLesson}`}>
-                            Next Lesson
-                            <ChevronRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* CONTENT */}
+            <div className="whitespace-pre-line text-sm">
+              {lesson.content}
             </div>
 
-            {/* Sidebar - Lesson List */}
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lesson Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="p-3 bg-primary/10 rounded-lg font-medium">
-                      Lesson {lesson.id}: {lesson.title}
-                    </div>
-                    <p className="text-muted-foreground pt-2">Use the navigation buttons to move between lessons</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
+            
+          </CardContent>
+        </Card>
       </main>
 
       <Footer />
     </div>
   )
 }
-
-// Import missing component
-import { PlayCircle } from "lucide-react"
