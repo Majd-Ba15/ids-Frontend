@@ -1,14 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input" // ✅ add input
+import { Input } from "@/components/ui/input"
+import { apiFetch } from "@/lib/api"
 
 type Course = {
   id: number
@@ -17,6 +19,10 @@ type Course = {
   difficulty: string
   shortDescription: string
   thumbnail: string | null
+}
+
+type MyEnrollment = {
+  courseId: number
 }
 
 const categoryImageMap: Record<string, string> = {
@@ -29,101 +35,149 @@ const categoryImageMap: Record<string, string> = {
 }
 
 export default function CoursesPage() {
+  const router = useRouter()
+
   const [courses, setCourses] = useState<Course[]>([])
-  const [search, setSearch] = useState("") // ✅ search state
+  const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [enrolledIds, setEnrolledIds] = useState<number[]>([])
+  const [enrollingId, setEnrollingId] = useState<number | null>(null)
+  const [tokenExists, setTokenExists] = useState(false)
+
+  // ✅ detect token safely
+  useEffect(() => {
+    setTokenExists(!!localStorage.getItem("token"))
+  }, [])
+
+  async function loadCourses() {
+    const data = await apiFetch<Course[]>("/api/courses")
+    setCourses(data)
+  }
+
+  async function loadMyEnrollments() {
+    if (!tokenExists) {
+      setEnrolledIds([])
+      return
+    }
+
+    const enrolls = await apiFetch<MyEnrollment[]>("/api/enrollments/my")
+    setEnrolledIds(enrolls.map(e => e.courseId))
+  }
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    ;(async () => {
       try {
-        const res = await fetch("https://localhost:7026/api/Courses")
-
-        if (!res.ok) {
-          throw new Error(`HTTP error ${res.status}`)
-        }
-
-        const data = await res.json()
-        setCourses(data)
-      } catch (err) {
-        console.error(err)
-        setError("Failed to fetch courses")
+        await loadCourses()
+        await loadMyEnrollments()
       } finally {
         setLoading(false)
       }
+    })()
+  }, [tokenExists])
+
+  const filteredCourses = useMemo(() => {
+    return courses.filter(c =>
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      c.category.toLowerCase().includes(search.toLowerCase()) ||
+      c.difficulty.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [courses, search])
+
+  async function handleEnroll(courseId: number) {
+    if (!tokenExists) {
+      router.push("/login")
+      return
     }
 
-    fetchCourses()
-  }, [])
+    try {
+      setEnrollingId(courseId)
 
-  // ✅ FILTER LOGIC
-  const filteredCourses = courses.filter(course =>
-    course.title.toLowerCase().includes(search.toLowerCase()) ||
-    course.category.toLowerCase().includes(search.toLowerCase()) ||
-    course.difficulty.toLowerCase().includes(search.toLowerCase())
-  )
+      await apiFetch("/api/enrollments", {
+        method: "POST",
+        body: JSON.stringify({ courseId }),
+      })
+
+      await loadMyEnrollments()
+      router.push("/dashboard")
+
+    } catch (e: any) {
+      // ✅ IMPORTANT: already enrolled is NOT an error
+      if (e.message?.includes("Already enrolled")) {
+        await loadMyEnrollments()
+        return
+      }
+
+      alert("Enroll failed")
+    } finally {
+      setEnrollingId(null)
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header isLoggedIn />
+      <Header isLoggedIn={tokenExists} />
 
       <main className="flex-1 py-12 px-4">
         <div className="container mx-auto">
           <h1 className="text-4xl font-bold mb-6">Browse Courses</h1>
 
-          {/* ✅ SEARCH INPUT */}
-          <div className="mb-8">
-            <Input
-              placeholder="Search by title, category, or difficulty..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="max-w-md"
-            />
-          </div>
+          <Input
+            placeholder="Search by title, category, or difficulty..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-md mb-8"
+          />
 
           {loading && <p>Loading courses...</p>}
-          {error && <p className="text-red-500">{error}</p>}
 
-          {!loading && !error && (
+          {!loading && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredCourses.length === 0 && (
-                <p className="text-muted-foreground col-span-full">
-                  No courses found.
-                </p>
-              )}
+              {filteredCourses.map(course => {
+                const isEnrolled = enrolledIds.includes(course.id)
 
-              {filteredCourses.map(course => (
-                <Card key={course.id} className="overflow-hidden">
-                  <img
-                    src={
-                      categoryImageMap[course.category] ||
-                      "/placeholder.jpg"
-                    }
-                    alt={course.title}
-                    className="w-full h-48 object-cover"
-                  />
+                return (
+                  <Card key={course.id} className="overflow-hidden">
+                    <img
+                      src={
+                        categoryImageMap[course.category] ||
+                        course.thumbnail ||
+                        "/placeholder.jpg"
+                      }
+                      alt={course.title}
+                      className="w-full h-48 object-cover"
+                    />
 
-                  <CardHeader>
-                    <div className="flex gap-2 mb-2">
-                      <Badge variant="secondary">{course.category}</Badge>
-                      <Badge variant="outline">{course.difficulty}</Badge>
-                    </div>
+                    <CardHeader>
+                      <div className="flex gap-2 mb-2">
+                        <Badge variant="secondary">{course.category}</Badge>
+                        <Badge variant="outline">{course.difficulty}</Badge>
+                      </div>
 
-                    <CardTitle>{course.title}</CardTitle>
-                    <CardDescription>
-                      {course.shortDescription}
-                    </CardDescription>
-                  </CardHeader>
+                      <CardTitle>{course.title}</CardTitle>
+                      <CardDescription>{course.shortDescription}</CardDescription>
+                    </CardHeader>
 
-                  <CardFooter>
-                    <Button asChild className="w-full">
-                      <Link href={`/courses/${course.id}`}>
-                        View Course
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    <CardFooter className="flex flex-col gap-2">
+                      <Button asChild className="w-full">
+                        <Link href={`/courses/${course.id}`}>View Course</Link>
+                      </Button>
+
+                      <Button
+                        className="w-full"
+                        variant={isEnrolled ? "outline" : "default"}
+                        disabled={isEnrolled || enrollingId === course.id}
+                        onClick={() => handleEnroll(course.id)}
+                      >
+                        {isEnrolled
+                          ? "Enrolled"
+                          : enrollingId === course.id
+                          ? "Enrolling..."
+                          : "Enroll"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )
+              })}
             </div>
           )}
         </div>

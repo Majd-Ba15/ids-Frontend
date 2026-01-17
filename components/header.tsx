@@ -1,9 +1,8 @@
 "use client"
 
-import { Search, GraduationCap, User, LogOut, SettingsIcon } from "lucide-react"
 import Link from "next/link"
+import { GraduationCap, User, LogOut, SettingsIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,12 +12,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-const handleLogout = () => {
-  localStorage.removeItem("token")
-  window.location.href = "/login"
+
+type HeaderProps = {
+  isLoggedIn: boolean
 }
 
-export function Header({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
+export function Header({ isLoggedIn }: HeaderProps) {
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    window.location.href = "/login"
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -28,42 +32,47 @@ export function Header({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
           <span className="text-2xl font-bold text-primary">eLEARNING</span>
         </Link>
 
-
-        {/* User Menu */}
+        {/* Right side */}
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar>
-                    <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    {/* ALWAYS public image */}
+                    <AvatarImage src="/images/user.png" alt="User" />
+                    <AvatarFallback>U</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="cursor-pointer">
+                  <Link href="/dashboard">
                     <User className="mr-2 h-4 w-4" />
-                    Profile
+                    Dashboard
                   </Link>
                 </DropdownMenuItem>
+
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings" className="cursor-pointer">
+                  <Link href="/dashboard/settings">
                     <SettingsIcon className="mr-2 h-4 w-4" />
                     Settings
                   </Link>
                 </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
+
                 <DropdownMenuItem
-  onClick={handleLogout}
-  className="cursor-pointer text-red-600"
->
-  <LogOut className="mr-2 h-4 w-4" />
-  Logout
-</DropdownMenuItem>
+                  onClick={handleLogout}
+                  className="cursor-pointer text-red-600"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (

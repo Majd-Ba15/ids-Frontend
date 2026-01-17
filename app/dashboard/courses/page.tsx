@@ -1,81 +1,82 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
+"use client"
 
-export default function MyCoursesPage() {
-  const courses = [
-    {
-      id: 1,
-      title: "Web Development Fundamentals",
-      progress: 65,
-      category: "Development",
-      thumbnail: "/web-development-concept.png",
-      totalLessons: 24,
-      completedLessons: 16,
-    },
-    {
-      id: 2,
-      title: "Python for Data Science",
-      progress: 40,
-      category: "Data Science",
-      thumbnail: "/python-programming-concept.png",
-      totalLessons: 30,
-      completedLessons: 12,
-    },
-    {
-      id: 3,
-      title: "Digital Marketing Basics",
-      progress: 85,
-      category: "Marketing",
-      thumbnail: "/digital-marketing-strategy.png",
-      totalLessons: 20,
-      completedLessons: 17,
-    },
-  ]
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { apiFetch } from "@/lib/api"
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+
+type Course = {
+  id: number
+  title: string
+  category: string
+  difficulty: string
+  shortDescription: string
+}
+
+type Enrollment = {
+  courseId: number
+}
+
+const categoryImageMap: Record<string, string> = {
+  Programming: "/web-development-concept.png",
+  Backend: "/react-development-concept.png",
+  "Data Science": "/python-data-science.png",
+}
+
+export default function CoursesPage() {
+  const router = useRouter()
+  const [courses, setCourses] = useState<Course[]>([])
+  const [enrolledIds, setEnrolledIds] = useState<number[]>([])
+
+  useEffect(() => {
+    apiFetch<Course[]>("/api/Courses").then(setCourses)
+
+    apiFetch<Enrollment[]>("/api/Enrollments/my")
+      .then(data => setEnrolledIds(data.map(e => e.courseId)))
+      .catch(() => setEnrolledIds([]))
+  }, [])
+
+  async function enroll(courseId: number) {
+    await apiFetch("/api/Enrollments", {
+      method: "POST",
+      body: JSON.stringify({ courseId }),
+    })
+    router.push("/dashboard")
+  }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">My Courses</h1>
-        <p className="text-muted-foreground">Continue learning from where you left off</p>
-      </div>
+    <div className="grid grid-cols-3 gap-6">
+      {courses.map(course => {
+        const isEnrolled = enrolledIds.includes(course.id)
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {courses.map((course) => (
+        return (
           <Card key={course.id}>
             <img
-              src={course.thumbnail || "/placeholder.svg"}
-              alt={course.title}
-              className="w-full h-48 object-cover rounded-t-lg"
+              src={categoryImageMap[course.category] || "/placeholder.jpg"}
+              className="h-48 w-full object-cover"
             />
+
             <CardHeader>
-              <Badge variant="secondary" className="w-fit mb-2">
-                {course.category}
-              </Badge>
-              <CardTitle className="line-clamp-2">{course.title}</CardTitle>
-              <CardDescription>
-                {course.completedLessons} of {course.totalLessons} lessons completed
-              </CardDescription>
+              <Badge>{course.category}</Badge>
+              <h3 className="font-bold">{course.title}</h3>
+              <p className="text-sm">{course.shortDescription}</p>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Progress</span>
-                  <span className="font-medium">{course.progress}%</span>
-                </div>
-                <Progress value={course.progress} />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button asChild className="w-full">
-                <Link href={`/courses/${course.id}`}>Continue Learning</Link>
+
+            <CardContent className="flex gap-2">
+              <Button asChild variant="outline">
+                <Link href={`/courses/${course.id}`}>View</Link>
               </Button>
-            </CardFooter>
+
+              {!isEnrolled && (
+                <Button onClick={() => enroll(course.id)}>Enroll</Button>
+              )}
+            </CardContent>
           </Card>
-        ))}
-      </div>
+        )
+      })}
     </div>
   )
 }

@@ -11,6 +11,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+// ✅ ADD THIS HELPER
+function getRoleFromToken(token: string): string | null {
+  try {
+    const payload = token.split(".")[1]
+    const decoded = JSON.parse(atob(payload))
+    return (
+      decoded.role ||
+      decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+      null
+    )
+  } catch {
+    return null
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState("")
@@ -26,9 +41,7 @@ export default function LoginPage() {
     try {
       const res = await fetch("https://localhost:7026/api/Auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       })
 
@@ -38,11 +51,17 @@ export default function LoginPage() {
 
       const data = await res.json()
 
-      // ✅ Save token
+      // ✅ Save token (UNCHANGED)
       localStorage.setItem("token", data.token)
 
-      // ✅ Redirect
-      router.push("/dashboard")
+      // ✅ NEW: role-based redirect
+      const role = getRoleFromToken(data.token)
+
+      if (role === "Instructor") {
+        router.push("/instructor/dashboard")
+      } else {
+        router.push("/dashboard")
+      }
     } catch (err: any) {
       setError(err.message)
     } finally {
