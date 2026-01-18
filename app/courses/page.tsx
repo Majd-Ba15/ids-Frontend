@@ -115,7 +115,7 @@ export default function CoursesPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header isLoggedIn={tokenExists} />
+      <Header />
 
       <main className="flex-1 py-12 px-4">
         <div className="container mx-auto">

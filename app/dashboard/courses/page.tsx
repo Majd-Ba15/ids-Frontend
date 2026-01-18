@@ -2,81 +2,78 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 
 type Course = {
   id: number
   title: string
-  category: string
-  difficulty: string
-  shortDescription: string
+  description: string
 }
 
-type Enrollment = {
-  courseId: number
-}
-
-const categoryImageMap: Record<string, string> = {
-  Programming: "/web-development-concept.png",
-  Backend: "/react-development-concept.png",
-  "Data Science": "/python-data-science.png",
+// 🔹 map course title → public image
+export const courseImages: Record<string, string> = {
+  "ASP.NET Core": "/web-development-course.png",
+  "ASP.NET Core Updated": "/react-development-concept.png",
+  "Python Programming": "/python-programming-concept.png",
+  "Python for Data Science": "/python-data-science.png",
+  "Web Development Fundamentals": "/web-development-concept.png",
 }
 
 export default function CoursesPage() {
-  const router = useRouter()
   const [courses, setCourses] = useState<Course[]>([])
-  const [enrolledIds, setEnrolledIds] = useState<number[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    apiFetch<Course[]>("/api/Courses").then(setCourses)
-
-    apiFetch<Enrollment[]>("/api/Enrollments/my")
-      .then(data => setEnrolledIds(data.map(e => e.courseId)))
-      .catch(() => setEnrolledIds([]))
+    apiFetch<Course[]>("/api/courses")
+      .then(setCourses)
+      .finally(() => setLoading(false))
   }, [])
 
-  async function enroll(courseId: number) {
-    await apiFetch("/api/Enrollments", {
-      method: "POST",
-      body: JSON.stringify({ courseId }),
-    })
-    router.push("/dashboard")
-  }
+  if (loading) return <p>Loading courses...</p>
 
   return (
-    <div className="grid grid-cols-3 gap-6">
-      {courses.map(course => {
-        const isEnrolled = enrolledIds.includes(course.id)
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">My Courses</h1>
 
-        return (
-          <Card key={course.id}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {courses.map(course => (
+          <div
+            key={course.id}
+            className="border rounded-lg overflow-hidden"
+          >
+            {/* IMAGE */}
             <img
-              src={categoryImageMap[course.category] || "/placeholder.jpg"}
-              className="h-48 w-full object-cover"
+              src={
+                courseImages[course.title] ??
+                "/courses/default.jpg"
+              }
+              alt={course.title}
+              className="w-full h-40 object-cover"
             />
 
-            <CardHeader>
-              <Badge>{course.category}</Badge>
-              <h3 className="font-bold">{course.title}</h3>
-              <p className="text-sm">{course.shortDescription}</p>
-            </CardHeader>
+            {/* CONTENT */}
+            <div className="p-4 space-y-2">
+              <h3 className="font-semibold">
+                {course.title}
+              </h3>
 
-            <CardContent className="flex gap-2">
-              <Button asChild variant="outline">
-                <Link href={`/courses/${course.id}`}>View</Link>
+              <p className="text-sm text-muted-foreground">
+                {course.description}
+              </p>
+
+              {/* 🔥 FIXED VIEW */}
+              <Button asChild className="w-full">
+                <Link
+                  href={`/dashboard/courses/${course.id}`}
+                >
+                  View Course
+                </Link>
               </Button>
-
-              {!isEnrolled && (
-                <Button onClick={() => enroll(course.id)}>Enroll</Button>
-              )}
-            </CardContent>
-          </Card>
-        )
-      })}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

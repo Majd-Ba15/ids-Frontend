@@ -1,97 +1,118 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import { apiFetch } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 
 type Lesson = {
   id: number
   title: string
-  videoUrl: string
-  order: number
-  isCompleted: boolean
+  videoUrl: string | null
+  orderIndex: number
 }
 
 export default function LessonPage() {
-  const { id, lessonId } = useParams<{ id: string; lessonId: string }>()
+  const { id, lessonId } = useParams()
   const router = useRouter()
 
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    apiFetch<Lesson[]>(`/api/Courses/${id}/lessons`)
-      .then(data => setLessons(data.sort((a, b) => a.order - b.order)))
-      .catch(console.error)
+    apiFetch<Lesson[]>(`/api/lessons/course/${id}`)
+      .then(data => {
+        setLessons(data.sort((a, b) => a.orderIndex - b.orderIndex))
+      })
       .finally(() => setLoading(false))
   }, [id])
 
-  const current = useMemo(
-    () => lessons.find(l => l.id === Number(lessonId)),
-    [lessons, lessonId]
+  if (loading) return <p>Loading...</p>
+
+  const index = lessons.findIndex(l => l.id === Number(lessonId))
+  if (index === -1) return <p>Lesson not found</p>
+
+  const lesson = lessons[index]
+
+  // ✅ COMPLETE LESSON (NO JSON)
+  async function completeLesson() {
+  const token = localStorage.getItem("token")
+  if (!token) return
+
+  const res = await fetch(
+    `http://localhost:7026/api/lessons/${lesson.id}/complete`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
   )
 
-  const prev = useMemo(() => {
-    if (!current) return null
-    return lessons.find(l => l.order === current.order - 1) || null
-  }, [lessons, current])
+  if (!res.ok) return
 
-  const next = useMemo(() => {
-    if (!current) return null
-    return lessons.find(l => l.order === current.order + 1) || null
-  }, [lessons, current])
-
-  async function markComplete() {
-    await apiFetch(`/api/Lessons/${lessonId}/complete`, { method: "POST" })
-
-    // reload lessons to update isCompleted + unlock next
-    const updated = await apiFetch<Lesson[]>(`/api/Courses/${id}/lessons`)
-    const sorted = updated.sort((a, b) => a.order - b.order)
-    setLessons(sorted)
-
-    if (next) {
-      router.push(`/dashboard/courses/${id}/lessons/${next.id}`)
-    } else {
-      router.push(`/dashboard/courses/${id}`)
-    }
-  }
-
-  if (loading) return <p>Loading lesson...</p>
-  if (!current) return <p>No lesson found.</p>
+  const next = lessons[index + 1]
+  router.push(
+    next
+      ? `/dashboard/courses/${id}/lessons/${next.id}`
+      : `/dashboard/courses/${id}`
+  )
+}
 
   return (
     <div className="space-y-6">
-      {/* BACK */}
-      <Button variant="outline" onClick={() => router.push(`/dashboard/courses/${id}`)}>
+      <Link href={`/dashboard/courses/${id}`}>
         ← Back to Course
-      </Button>
+      </Link>
 
-      <h1 className="text-2xl font-bold">{current.title}</h1>
+      <h1 className="text-xl font-bold">{lesson.title}</h1>
 
-      <video controls className="w-full rounded">
-        <source src={current.videoUrl} />
-      </video>
+      {/* ✅ VIDEO HANDLING */}
+      {lesson.videoUrl ? (
+        lesson.videoUrl.includes("youtube") ||
+        lesson.videoUrl.includes("youtu.be") ? (
+          <iframe
+            src={lesson.videoUrl.replace("watch?v=", "embed/")}
+            className="w-full aspect-video rounded"
+            allowFullScreen
+          />
+        ) : (
+   <div className="max-w-md mx-auto">
+  <video
+    controls
+    className="w-full aspect-video rounded-md bg-black"
+  >
+    <source
+      src={
+        lesson.videoUrl!.startsWith("http")
+          ? lesson.videoUrl!
+          : `http://localhost:7026${lesson.videoUrl}`
+      }
+      type="video/mp4"
+    />
+  </video>
+</div>
+        )
+      ) : (
+        <p className="text-gray-500">No video available</p>
+      )}
 
+      {/* NAV */}
       <div className="flex justify-between">
         <Button
-          variant="outline"
-          disabled={!prev}
-          onClick={() => prev && router.push(`/dashboard/courses/${id}/lessons/${prev.id}`)}
+          disabled={index === 0}
+          onClick={() =>
+            router.push(
+              `/dashboard/courses/${id}/lessons/${lessons[index - 1].id}`
+            )
+          }
         >
-          Previous
+          Prev
         </Button>
 
-        <Button onClick={markComplete}>
-          {next ? "Complete & Next" : "Complete Course"}
-        </Button>
-
-        <Button
-          variant="outline"
-          disabled={!next}
-          onClick={() => next && router.push(`/dashboard/courses/${id}/lessons/${next.id}`)}
-        >
-          Next
+        <Button onClick={completeLesson}>
+          Mark as Completed
         </Button>
       </div>
     </div>

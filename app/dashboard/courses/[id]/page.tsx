@@ -1,99 +1,62 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 import Link from "next/link"
 import { apiFetch } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 
-type EnrolledCourse = {
-  courseId: number
-  courseTitle: string
-  category: string
-  progressPercentage: number
-}
-
 type Lesson = {
   id: number
   title: string
-  order: number
-  isCompleted: boolean
+  orderIndex: number
 }
 
 export default function CoursePage() {
-  const { id } = useParams<{ id: string }>()
-  const router = useRouter()
-
-  const [course, setCourse] = useState<EnrolledCourse | null>(null)
+  const { id } = useParams()
   const [lessons, setLessons] = useState<Lesson[]>([])
-  const [loading, setLoading] = useState(true)
+  const [completed, setCompleted] = useState<number[]>([])
 
   useEffect(() => {
-    async function load() {
-      // 1) load course from enrollments
-      const enrollments = await apiFetch<EnrolledCourse[]>("/api/Enrollments/my")
-      const found = enrollments.find(e => e.courseId === Number(id))
-      if (!found) {
-        router.push("/dashboard")
-        return
-      }
-      setCourse(found)
-
-      // 2) load lessons
-      const list = await apiFetch<Lesson[]>(`/api/Courses/${id}/lessons`)
-      setLessons(list.sort((a, b) => a.order - b.order))
-    }
-
-    load()
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [id, router])
-
-  const firstUncompletedOrder = useMemo(() => {
-    const u = lessons.find(l => !l.isCompleted)
-    return u ? u.order : 9999
-  }, [lessons])
-
-  if (loading) return <p>Loading...</p>
-  if (!course) return null
+    ;(async () => {
+      const l = await apiFetch<Lesson[]>(`/api/lessons/course/${id}`)
+      const c = await apiFetch<number[]>(`/api/lessons/completed`)
+      setLessons(l.sort((a, b) => a.orderIndex - b.orderIndex))
+      setCompleted(c)
+    })()
+  }, [id])
 
   return (
     <div className="space-y-6">
-      <Button variant="outline" onClick={() => router.push("/dashboard")}>
-        ← Back to Dashboard
-      </Button>
+      <Link href="/dashboard">← Back</Link>
 
-      <h1 className="text-3xl font-bold">{course.courseTitle}</h1>
+      <h1 className="text-2xl font-bold">Course Lessons</h1>
 
-      <div className="space-y-3">
-        {lessons.map(lesson => {
-          const locked = lesson.order > firstUncompletedOrder
+      {lessons.map((lesson, i) => {
+        const unlocked =
+          i === 0 || completed.includes(lessons[i - 1].id)
 
-          return (
-            <div
-              key={lesson.id}
-              className="flex justify-between items-center border p-4 rounded"
-            >
-              <div>
-                <div className="font-semibold">{lesson.title}</div>
-                {lesson.isCompleted ? (
-                  <div className="text-sm text-green-600">Completed</div>
-                ) : locked ? (
-                  <div className="text-sm text-red-500">Locked</div>
-                ) : (
-                  <div className="text-sm text-muted-foreground">Available</div>
-                )}
-              </div>
+        return (
+          <div
+            key={lesson.id}
+            className="border p-4 rounded flex justify-between"
+          >
+            <span>{lesson.title}</span>
 
-              <Button disabled={locked} asChild>
-                <Link href={`/dashboard/courses/${id}/lessons/${lesson.id}`}>
-                  {lesson.isCompleted ? "Review" : "Start"}
+            {unlocked ? (
+              <Button asChild>
+                <Link
+                  href={`/dashboard/courses/${id}/lessons/${lesson.id}`}
+                >
+                  Continue
                 </Link>
               </Button>
-            </div>
-          )
-        })}
-      </div>
+            ) : (
+              <Button disabled>Locked</Button>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
