@@ -16,30 +16,40 @@ export default function CoursePage() {
   const { id } = useParams()
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [completed, setCompleted] = useState<number[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    ;(async () => {
-      const l = await apiFetch<Lesson[]>(`/api/lessons/course/${id}`)
-      const c = await apiFetch<number[]>(`/api/lessons/completed`)
-      setLessons(l.sort((a, b) => a.orderIndex - b.orderIndex))
-      setCompleted(c)
-    })()
+    async function load() {
+      const lessonsData = await apiFetch<Lesson[]>(
+        `/api/lessons/course/${id}`
+      )
+      const completedData = await apiFetch<number[]>(
+        `/api/lessons/completed`
+      )
+
+      setLessons(lessonsData.sort((a, b) => a.orderIndex - b.orderIndex))
+      setCompleted(completedData)
+      setLoading(false)
+    }
+    load()
   }, [id])
+
+  if (loading) return <p>Loading lessons...</p>
 
   return (
     <div className="space-y-6">
-      <Link href="/dashboard">← Back</Link>
+      <Link href="/dashboard">← Back to Dashboard</Link>
 
       <h1 className="text-2xl font-bold">Course Lessons</h1>
 
-      {lessons.map((lesson, i) => {
+      {lessons.map((lesson, index) => {
         const unlocked =
-          i === 0 || completed.includes(lessons[i - 1].id)
+          index === 0 || completed.includes(lessons[index - 1].id)
 
         return (
           <div
             key={lesson.id}
-            className="border p-4 rounded flex justify-between"
+            className="border p-4 rounded flex justify-between items-center"
           >
             <span>{lesson.title}</span>
 

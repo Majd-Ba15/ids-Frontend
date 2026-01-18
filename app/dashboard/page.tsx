@@ -21,6 +21,7 @@ export const courseImages: Record<string, string> = {
 }
 
 
+
 export default function DashboardPage() {
   const [courses, setCourses] = useState<EnrolledCourse[]>([])
 
