@@ -11,16 +11,6 @@ type EnrolledCourse = {
   courseTitle: string
   progressPercentage: number
 }
-// lib/courseImages.ts
-export const courseImages: Record<string, string> = {
-  "ASP.NET Core": "/web-development-course.png",
-  "ASP.NET Core Updated": "/react-development-concept.png",
-  "Python Programming": "/python-programming-concept.png",
-  "Python for Data Science": "/python-data-science.png",
-  "Web Development Fundamentals": "/web-development-concept.png",
-}
-
-
 
 export default function DashboardPage() {
   const [courses, setCourses] = useState<EnrolledCourse[]>([])
@@ -35,7 +25,6 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      {/* STATS */}
       <div className="grid grid-cols-3 gap-4">
         <div className="border p-4 rounded">Enrolled: {courses.length}</div>
         <div className="border p-4 rounded">
@@ -44,28 +33,29 @@ export default function DashboardPage() {
         <div className="border p-4 rounded">Certificates: 0</div>
       </div>
 
-      {/* CONTINUE LEARNING */}
       <div className="border rounded p-4 space-y-4">
         <h2 className="text-xl font-semibold">Continue Learning</h2>
 
         {courses.map(course => (
           <div key={course.courseId} className="flex gap-4 border p-4 rounded">
-            <img
-  src={courseImages[course.courseTitle] ?? "/placeholder.jpg"}
-  alt={course.courseTitle}
-  className="w-32 h-20 object-cover rounded"
-/>
-
             <div className="flex-1">
               <p className="font-semibold">{course.courseTitle}</p>
               <Progress value={course.progressPercentage} />
             </div>
 
-            <Button asChild>
-              <Link href={`/dashboard/courses/${course.courseId}`}>
-                Continue
-              </Link>
-            </Button>
+            {course.progressPercentage === 100 ? (
+              <Button asChild>
+                <Link href={`/dashboard/courses/${course.courseId}/quiz`}>
+                  Take Quiz
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href={`/dashboard/courses/${course.courseId}`}>
+                  Continue
+                </Link>
+              </Button>
+            )}
           </div>
         ))}
       </div>

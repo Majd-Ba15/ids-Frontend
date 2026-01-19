@@ -12,7 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <Header isLoggedIn={true} />
+      <Header />
 
       <div className="flex flex-1">
         <Sidebar />
