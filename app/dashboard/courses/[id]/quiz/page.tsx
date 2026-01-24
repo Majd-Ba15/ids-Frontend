@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -33,7 +33,7 @@ function getToken() {
   return typeof window !== "undefined" ? localStorage.getItem("token") : null
 }
 
-// ✅ IMPORTANT: for endpoints that return Ok() with NO JSON (QuizResponses)
+// ✅ for endpoints that return Ok() with no JSON OR we don't care about JSON
 async function fetchNoJson(path: string, options: RequestInit = {}) {
   const token = getToken()
   const res = await fetch(`https://localhost:7026${path}`, {
@@ -44,11 +44,11 @@ async function fetchNoJson(path: string, options: RequestInit = {}) {
       ...(options.headers || {}),
     },
   })
+
   if (!res.ok) {
     const text = await res.text()
     throw new Error(text || `HTTP ${res.status}`)
   }
-  // do NOT parse json
   return
 }
 
@@ -56,6 +56,8 @@ export default function QuizPage() {
   const params = useParams()
   const router = useRouter()
   const courseId = Number(params.id)
+
+  const TIME_LIMIT_SECONDS = 2 * 60
 
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [remaining, setRemaining] = useState<number | null>(null)
@@ -65,9 +67,6 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-
-  // ✅ Always 2 minutes
-  const TIME_LIMIT_SECONDS = 2 * 60
   const [secondsLeft, setSecondsLeft] = useState<number>(TIME_LIMIT_SECONDS)
 
   const [lastResult, setLastResult] = useState<null | {
@@ -78,7 +77,18 @@ export default function QuizPage() {
   }>(null)
 
   const locked = remaining === 0
-  const autoSubmittingRef = useRef(false)
+  const passedAlready = lastResult?.passed === true
+
+  // 🔒 locks
+  const submitLockRef = useRef(false)
+  const autoSubmitDisabledRef = useRef(false)
+
+  // ⏱ timer ref
+  const timerRef = useRef<number | null>(null)
+
+  function getActiveAttempt(attempts: Attempt[]) {
+    return attempts.find(a => a.submittedAt === null) ?? null
+  }
 
   async function refreshMeta(qid: number) {
     const rem = await apiFetch<{ remaining: number }>(`/api/QuizAttempts/remaining/${qid}`)
@@ -86,9 +96,16 @@ export default function QuizPage() {
 
     const hist = await apiFetch<Attempt[]>(`/api/QuizAttempts/my/${qid}`)
     setHistory(hist)
+
+    const active = getActiveAttempt(hist)
+    if (active) {
+      setAttemptId(active.id)
+      setSecondsLeft(TIME_LIMIT_SECONDS)
+      setAnswers({})
+    }
   }
 
-  // Load quiz + meta (NO start here)
+  // INITIAL LOAD
   useEffect(() => {
     if (!courseId || Number.isNaN(courseId)) return
 
@@ -97,10 +114,17 @@ export default function QuizPage() {
         setLoading(true)
         const q = await apiFetch<Quiz>(`/api/Quizzes/course/${courseId}`)
         setQuiz(q)
-        setSecondsLeft(TIME_LIMIT_SECONDS)
+
+        // reset UI
         setAttemptId(null)
         setAnswers({})
+        setSecondsLeft(TIME_LIMIT_SECONDS)
         setLastResult(null)
+
+        // reset locks
+        submitLockRef.current = false
+        autoSubmitDisabledRef.current = false
+
         await refreshMeta(q.id)
       } catch (e: any) {
         alert(e.message || "Quiz not ready yet.")
@@ -111,41 +135,58 @@ export default function QuizPage() {
     })()
   }, [courseId, router])
 
-  // Timer runs only after start
+  // START/STOP TIMER WHEN attemptId CHANGES
   useEffect(() => {
+    // stop previous timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+
     if (!attemptId) return
-    if (secondsLeft <= 0) return
 
-    const t = setInterval(() => setSecondsLeft(s => s - 1), 1000)
-    return () => clearInterval(t)
-  }, [attemptId, secondsLeft])
+    timerRef.current = window.setInterval(() => {
+      setSecondsLeft(s => (s > 0 ? s - 1 : 0))
+    }, 1000)
 
-  // Auto submit once
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [attemptId])
+
+  // AUTO SUBMIT at 0 (ONLY ONCE)
   useEffect(() => {
     if (!attemptId) return
     if (secondsLeft !== 0) return
-    if (autoSubmittingRef.current) return
-    autoSubmittingRef.current = true
-    submit(true).finally(() => {
-      autoSubmittingRef.current = false
-    })
+    if (autoSubmitDisabledRef.current) return
+    if (submitLockRef.current) return
+
+    submit(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, attemptId])
 
   async function start() {
     if (!quiz) return
     if (locked) return
-    if (lastResult?.passed) return // ✅ already passed, no more starts
+    if (passedAlready) return
+    if (attemptId) return
 
     setStarting(true)
     try {
-      const startRes = await apiFetch<{ attemptId: number }>(`/api/QuizAttempts/start/${quiz.id}`, {
+      const res = await apiFetch<{ attemptId: number }>(`/api/QuizAttempts/start/${quiz.id}`, {
         method: "POST",
       })
-      setAttemptId(startRes.attemptId)
+
+      setAttemptId(res.attemptId)
       setSecondsLeft(TIME_LIMIT_SECONDS)
       setAnswers({})
       setLastResult(null)
+
+      autoSubmitDisabledRef.current = false
+      submitLockRef.current = false
     } catch (e: any) {
       alert(e.message || "Could not start attempt")
     } finally {
@@ -153,70 +194,100 @@ export default function QuizPage() {
     }
   }
 
+  // Save response safely: ignore duplicate / timing errors
+  async function saveResponseSafe(payload: any) {
+    try {
+      await fetchNoJson("/api/QuizResponses", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      })
+    } catch {
+      // ignore (duplicate / timing)
+    }
+  }
+
   async function submit(isAuto = false) {
     if (!quiz || !attemptId) return
+
+    // 🔒 HARD LOCK (prevent double submit)
+    if (submitLockRef.current) return
+    submitLockRef.current = true
+
+    autoSubmitDisabledRef.current = true
     setSubmitting(true)
 
+    // stop timer immediately
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+
+    const id = attemptId
+
     try {
-      // ✅ 1) Save responses in parallel (fast and reliable)
+      // ✅ BLOCK MANUAL SUBMIT IF ANY QUESTION UNANSWERED
+      const unanswered = quiz.questions.some(q => answers[q.id] == null)
+      if (!isAuto && unanswered) {
+        alert("⚠️ Please answer all questions before submitting.")
+        submitLockRef.current = false
+        setSubmitting(false)
+        return
+      }
+
+      // 1️⃣ Save responses (even if auto and some are null)
       const payloads = quiz.questions.map(q => ({
-        attemptId,
+        attemptId: id,
         questionId: q.id,
         selectedAnswerId: answers[q.id] ?? null,
       }))
 
-      await Promise.all(
-        payloads.map(p =>
-          fetchNoJson("/api/QuizResponses", {
-            method: "POST",
-            body: JSON.stringify(p),
-          })
-        )
-      )
+      await Promise.all(payloads.map(p => saveResponseSafe(p)))
 
-      // ✅ 2) Submit attempt (this returns JSON)
+      // 2️⃣ Submit attempt
       const result = await apiFetch<{
         score: number
         earnedPoints: number
         totalPoints: number
         passed: boolean
-      }>(`/api/QuizAttempts/${attemptId}/submit`, {
+      }>(`/api/QuizAttempts/${id}/submit`, {
         method: "PUT",
         body: JSON.stringify({
           timeTaken: TIME_LIMIT_SECONDS - secondsLeft,
         }),
       })
 
-      setLastResult({
-        score: result.score,
-        passed: result.passed,
-        earnedPoints: result.earnedPoints,
-        totalPoints: result.totalPoints,
-      })
+      setLastResult(result)
 
-      // ✅ Reset radio buttons after submit
+      await refreshMeta(quiz.id)
+
+      // END attempt
       setAttemptId(null)
       setAnswers({})
       setSecondsLeft(TIME_LIMIT_SECONDS)
 
-      // ✅ Refresh meta/history
-      await refreshMeta(quiz.id)
+  if (result.passed) {
+  // ✅ MUST include /api
+  await apiFetch(
+    `/api/Certificates?courseId=${courseId}`,
+    { method: "POST" }
+  )
 
-      // ✅ Pass -> create certificate -> go certificates
-      if (result.passed) {
-        await apiFetch(`/api/Certificates?courseId=${courseId}`, { method: "POST" })
-        alert(`✅ Passed! Score: ${result.score}%`)
-        router.push("/dashboard/certificates")
-        return
-      }
+  // small delay to ensure DB commit
+  await new Promise(res => setTimeout(res, 300))
 
-      // Fail -> allow retake if remaining > 0
-      if (!isAuto) window.scrollTo({ top: 0, behavior: "smooth" })
+  alert(`✅ Passed! Score: ${result.score}%`)
+  router.push("/dashboard/certificates")
+  return
+}
+
+
+
       alert(`❌ Failed. Score: ${result.score}%`)
     } catch (e: any) {
       alert(e.message || "Submit failed")
     } finally {
       setSubmitting(false)
+      // keep submitLockRef locked for the duration of this submit
     }
   }
 
@@ -225,8 +296,6 @@ export default function QuizPage() {
 
   const mm = Math.floor(secondsLeft / 60)
   const ss = String(secondsLeft % 60).padStart(2, "0")
-
-  const passedAlready = lastResult?.passed === true
 
   return (
     <div className="space-y-6">
@@ -263,9 +332,7 @@ export default function QuizPage() {
       <div className="border rounded p-4">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Attempt History</h2>
-          <Button variant="outline" onClick={() => refreshMeta(quiz.id)}>
-            Refresh
-          </Button>
+          <Button variant="outline" onClick={() => refreshMeta(quiz.id)}>Refresh</Button>
         </div>
 
         {history.length === 0 ? (
@@ -316,6 +383,7 @@ export default function QuizPage() {
                     name={`q_${q.id}`}
                     checked={answers[q.id] === a.id}
                     onChange={() => setAnswers(prev => ({ ...prev, [q.id]: a.id }))}
+                    disabled={submitting}
                   />
                   {a.answerText}
                 </label>
